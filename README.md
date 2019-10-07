@@ -10,3 +10,6 @@ It parses out the transaction description field, and removes undesirable content
 
 ## How does it work?
 Startup the program, and select a csv file. Next, wait till the success or failure prompt. On success, simply check the same folder as your original file and look for a gibberish csv file. Open it up, and your transaction descriptions should now be cleaner.
+
+## What is it built off of?
+This program uses a mix of standard Java and JavaFX libraries. It is still a work-in-progress, so the final version may incorporate additional languages.
