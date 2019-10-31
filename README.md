@@ -10,7 +10,7 @@ Date | Transaction Description | Withdrawals | Deposits | Balance
 
 An example of a banking institution that uses this format is Toronto-Dominion (TD) Bank.
 
-##What does it not do?
+## What does it not do?
 Currently JavaCSVFinancialParser only supports a hard format and does not allow for more flexible options. This will be changed in a future update. The program also does not consider the existence of header rows in CSV files. 
 
 ## How does it work?
