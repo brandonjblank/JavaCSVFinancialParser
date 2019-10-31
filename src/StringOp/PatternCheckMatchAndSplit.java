@@ -1,3 +1,5 @@
+package StringOp;
+
 
 
 import java.util.regex.Matcher;
@@ -10,7 +12,7 @@ import java.util.regex.Pattern;
  */
 public class PatternCheckMatchAndSplit
 {
-    private Pattern amount_V1;
+    private Pattern amount_V1, amount_Vl2, amount_Vl3;
     private Pattern poundPattern;
     private Pattern dashPattern;
     
@@ -23,19 +25,9 @@ public class PatternCheckMatchAndSplit
      */
     public PatternCheckMatchAndSplit()
     {
-        amount_V1 = Pattern.compile("[0-9]*[0-9]*.[0-9]*\\_V"); //Needs additional fine tuning to work with amounts greater than 99.99_V
+        amount_V1 = Pattern.compile("[0-9]*.[0-9]*\\_V");
         poundPattern = Pattern.compile("\\#[0-9]*");
         dashPattern = Pattern.compile("\\s-\\s\\s");
-    }
-    
-    /**
-     * Deprecated: Replaced by checkAndReplace_pound function.
-     */
-    public String[] splitByPound(String str)
-    {
-        String[] ar = str.split("#");
-
-        return ar;
     }
     
     /**
@@ -123,31 +115,6 @@ public class PatternCheckMatchAndSplit
     }
 
     /**
-     * Deprecated: Needs to be updated and replaced. 
-     */
-    public String[] splitBySpace(String str)
-    {
-        String[] ar = str.split(" ");
-
-        return ar;
-    }
-    
-    /**
-     * Deprecated: Needs to be updated and replaced.
-     */
-    public boolean check_StarBracketCombo(String str)
-    {
-        boolean b = false;
-
-        if (str.contains("*<") || str.contains(">*"))
-        {
-            return true;
-        }
-
-        return false;
-    }
-    
-    /**
      * Checks the amount_V pattern for a match in the provided argument. Returns true if found, false if not found.
      */
     public boolean check_VAmount(String str)
@@ -182,5 +149,33 @@ public class PatternCheckMatchAndSplit
         }
 
         return null;
+    }
+    
+    
+    //Deprecated functions below
+    
+    /**
+     * Deprecated: Needs to be updated and replaced. 
+     */
+    public String[] splitBySpace(String str)
+    {
+        String[] ar = str.split(" ");
+
+        return ar;
+    }
+    
+    /**
+     * Deprecated: Needs to be updated and replaced.
+     */
+    public boolean check_StarBracketCombo(String str)
+    {
+        boolean b = false;
+
+        if (str.contains("*<") || str.contains(">*"))
+        {
+            return true;
+        }
+
+        return false;
     }
 }

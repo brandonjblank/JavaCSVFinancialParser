@@ -1,12 +1,14 @@
+package Main;
 
-
+import StringOp.RandomStringGenerator;
+import StringOp.PatternCheckMatchAndSplit;
 import java.io.*;
 import java.util.Scanner;
 import java.sql.Connection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 /**
- * A collection of methods used for parsing a CSV file, generating an output file, and parsing the fields into a database.
+ * A collection of methods used for parsing financial statements.
  *
  * @author Brandon Blank
  * @version 0.01
@@ -14,10 +16,10 @@ import java.util.regex.Pattern;
 public class CSVParser
 {
     private File f;
-    //private AppSettings sett;
 
     /**
-     * Constructor. Takes a File as input.
+     * Constructor: Takes a File as input.
+     * @param fi
      */
     public CSVParser(File fi)
     {
@@ -25,9 +27,9 @@ public class CSVParser
     }
 
     /**
-     * Creates a csv file using the RandomStringGenerator() class.
+     * Creates a new csv file using the RandomStringGenerator() class to provide the file name.
      */
-    private File createRandomFileName()
+    private File createNewFileWithRandomFileName()
     {
         RandomStringGenerator gen = new RandomStringGenerator();
 
@@ -54,7 +56,7 @@ public class CSVParser
 
             return testFile;
         }
-        catch(Exception e)
+        catch(IOException e)
         {
             //Logger message
 
@@ -62,38 +64,17 @@ public class CSVParser
         }
 
     }
-
-    /**
-     * Sets the source file data will be grabbed from.
-     */
-    public void setFile(File fi)
-    {
-        f = fi;
-    }
-
-    /**
-     * Reads in a csv file, and checks for a particular patterns. If found, the patterns are removed from the record and sent to a database table.
-     */
-    public void parseAndInputToDB(Connection db)
-    {
-
-    }
-
-    /**
-     * Reads in a csv file, and checks for a particular patterns. If found, the patterns are removed from the record.
-     * 
-     * When the process is complete, return true on successful read and write. Return false on exception throw.
-     * 
-     * The file that was created is deleted when the exception is thrown. May require protection permission to interact with the parent directory (ie. Desktop).
-     */
     
     /**
-     * Currently only works for transaction records that have 5 columns.
+     * Creates a new file to append the changed contents. On exception thrown, the file that is created is deleted.
+     * 
+     * The first column is evaluated for matches to known useless data, and if found then removed from the string.
      * 
      * @return boolean
      */
-    public boolean readFileAndOutput()
+    public boolean readFileAndOutputToFile()
     {
+        //Variables
         String temp;
         PrintWriter pw;
         File newFile;
@@ -101,12 +82,13 @@ public class CSVParser
         Scanner inp;
 
         //Prepare output file to be created
-        newFile = createRandomFileName();
+        newFile = createNewFileWithRandomFileName();
 
         //If file name fails to be made, it is null
         if (newFile == null)
         {
-            return false;
+            //Logger: File not found
+            return false; 
         }
 
         try
@@ -129,58 +111,41 @@ public class CSVParser
             {
                 temp = inp.nextLine()+"\n";
                 
+                System.out.println(temp);
+                
                 if (!temp.equals("\\n"))
                 {
-
+                    //Split line into array to better isolate first column
                     strArr = temp.split(",");
                    
-                    //Verify that the formatting is correct
-                    if (!verifyRecordFormat(strArr))
+                    //Assumption: strArr[0] contains the transaction descriptions
+                    if (sp.check_pound(strArr[0]))
                     {
-                        newFile.delete();
-                        return false;
+                        strArr[0] = sp.checkAndReplace_pound(strArr[0]);
                     }
 
-                    //Assumption: strArr[1] contains the transaction descriptions
-                    if (sp.check_pound(strArr[1]))
+                    if (sp.check_VAmount(strArr[0]))
                     {
-                        strArr[1] = sp.checkAndReplace_pound(strArr[1]);
+                        strArr[0] = sp.checkAndReplace_VAmount(strArr[0]);
                     }
 
-                    if (sp.check_VAmount(strArr[1]))
+                    if (sp.check_dash(strArr[0]))
                     {
-                        strArr[1] = sp.checkAndReplace_VAmount(strArr[1]);
+                        strArr[0] = sp.checkAndReplace_dash(strArr[0]);
                     }
 
-                    if (sp.check_dash(strArr[1]))
+                    StringBuilder sb = new StringBuilder();
+                    
+                    for(int i = 0; i < strArr.length; i++)
                     {
-                        strArr[1] = sp.checkAndReplace_dash(strArr[1]);
+                        sb.append(strArr[i]);
+
+                        if (i != strArr.length-1)
+                        {
+                            sb.append(",");
+                        }
                     }
 
-                    StringBuilder sb;
-                                   
-                    //Checks the length of the array, then applies the correct string generation by the length
-                    switch (strArr.length)
-                    {
-                        case 5: //Case for Date | Transaction Description | Withdrawals | Deposits | Balance
-                            sb = new StringBuilder(strArr[0] + "," + strArr[1] + "," + strArr[2] + "," + strArr[3] + "," + strArr[4]);
-                            break;
-                        
-                        case 4:  //Case for Date | Transaction Description | Withdrawals | Deposits
-                            sb = new StringBuilder(strArr[0] + "," + strArr[1] + "," + strArr[2] + "," + strArr[3]);
-                            break;
-                            
-                        default: //Case for unknown cases. Less efficient than declared code.
-                        
-                            sb = new StringBuilder();
-                        
-                            for(int i = 0; i < strArr.length; i++)
-                            {
-                                sb.append(strArr[i]);
-                            }
-                            break;
-                    }
-                  
                     pw.print(sb);
                     sb = null;
                 }
@@ -206,6 +171,30 @@ public class CSVParser
     }
     
     /**
+     * Sets the source file data will be grabbed from.
+     * @param fi
+     */
+    public void setFile(File fi)
+    {
+        f = fi;
+    }
+
+    /**
+     * Reads in a csv file, and checks for a particular patterns.If found, the patterns are removed from the record and sent to a database table.
+     * @param db
+     */
+    public void readFileAndOutputToDB(Connection db)
+    {
+        //To be created
+    }
+
+    
+    
+    
+    /**
+     * Deprecated
+     * 
+     * 
      * Verifies that the record is in an acceptable format that the program can parse
      * 
      * @param str String array
