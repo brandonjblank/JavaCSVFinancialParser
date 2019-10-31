@@ -19,5 +19,5 @@ Startup the program, and select a csv file. Next, wait till the success or failu
 ## What is it built off of?
 This program uses a mix of standard Java and JavaFX libraries. It is still a work-in-progress, so the final version may incorporate additional languages.
 
-##Can I offer suggestions?
+## Can I offer suggestions?
 Sure! Start by creating an issue, and we can go from there.
