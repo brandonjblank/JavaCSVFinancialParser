@@ -1,3 +1,5 @@
+
+
 import java.util.Random;
 /**
  * Generates a string of random characters and numbers.
