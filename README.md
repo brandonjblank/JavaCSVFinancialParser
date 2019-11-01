@@ -4,14 +4,16 @@ A program that checks the vendor descriptions of CSV transaction files for non-v
 Examples of data removed include "#123", "_V", and "00.00_V"
 
 ## What formats does it support?
-Currently, the main version of JavaCSVFinancialParser supports csv files that use the following format:
+Currently, the main version of JavaCSVFinancialParser supports CSV files that use the following format:
 
-Date | Transaction Description | Withdrawals | Deposits | Balance
+| Date | Transaction Description | Optional Field 1 | Optional Field 2 | ...
 
-The Lite Version currently requires the Transaction Description to be located in the first column, and scales according to the number of columns with relative ease.
+The Date field must be contained in the first column, and the second column should contain the Transaction Description. All other fields are considered optional.
+
+The Lite Version currently requires the Transaction Description to be located in the first column, and scales according to the number of columns. The Lite version is useful for pure list functionality and does not require additional columns outside of the mandatory Transaction Description column.
 
 ## What does it not do?
-The program also does not consider the existence of header rows in CSV files. It also does not cover all scenarios when parsing data.
+The program does not consider the existence of header rows in CSV files. It also does not cover all scenarios when parsing data.
 
 ## How does it work?
 Startup the program, and select a csv file. Next, wait till the success or failure prompt on screen. On success, simply check the same folder as your original file and look for a gibberish csv file. Open it up, and your transaction descriptions should now be cleaner. When a prompt displays failure, it means that the CSV file could not be properly parsed.
