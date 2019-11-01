@@ -10,7 +10,7 @@ Currently, the main version of JavaCSVFinancialParser supports CSV files that us
 
 The Date field must be contained in the first column, and the second column should contain the Transaction Description. All other fields are considered optional.
 
-The Lite Version currently requires the Transaction Description to be located in the first column, and scales according to the number of columns. The Lite version is useful for pure list functionality and does not require additional columns outside of the mandatory Transaction Description column.
+The lite version currently requires the Transaction Description to be located in the first column, and scales according to the number of columns. The lite version is useful for pure list functionality and does not require additional columns outside of the mandatory Transaction Description column.
 
 ## What does it not do?
 The program does not consider the existence of header rows in CSV files. It also does not cover all scenarios when parsing data.
