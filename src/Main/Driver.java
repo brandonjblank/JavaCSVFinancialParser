@@ -1,5 +1,8 @@
+package Main;
 
 
+
+import Main.CSVParser;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import java.io.*;
@@ -41,7 +44,7 @@ public class Driver extends Application
             {
                 CSVParser cp = new CSVParser(f);
 
-                status = cp.readFileAndOutput();
+                status = cp.readFileAndOutputToFile();
             }
 
             if (status)

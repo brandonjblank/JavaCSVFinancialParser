@@ -1,5 +1,9 @@
+package Main;
 
 
+
+import StringOp.RandomStringGenerator;
+import StringOp.PatternCheckMatchAndSplit;
 import java.io.*;
 import java.util.Scanner;
 import java.sql.Connection;
@@ -14,10 +18,10 @@ import java.util.regex.Pattern;
 public class CSVParser
 {
     private File f;
-    //private AppSettings sett;
 
     /**
-     * Constructor. Takes a File as input.
+     * Constructor: Takes a File as input.
+     * @param fi
      */
     public CSVParser(File fi)
     {
@@ -25,9 +29,9 @@ public class CSVParser
     }
 
     /**
-     * Creates a csv file using the RandomStringGenerator() class.
+     * Creates a new csv file using the RandomStringGenerator() class to provide the file name.
      */
-    private File createRandomFileName()
+    private File createNewFileWithRandomFileName()
     {
         RandomStringGenerator gen = new RandomStringGenerator();
 
@@ -54,7 +58,7 @@ public class CSVParser
 
             return testFile;
         }
-        catch(Exception e)
+        catch(IOException e)
         {
             //Logger message
 
@@ -64,35 +68,14 @@ public class CSVParser
     }
 
     /**
-     * Sets the source file data will be grabbed from.
-     */
-    public void setFile(File fi)
-    {
-        f = fi;
-    }
-
-    /**
-     * Reads in a csv file, and checks for a particular patterns. If found, the patterns are removed from the record and sent to a database table.
-     */
-    public void parseAndInputToDB(Connection db)
-    {
-
-    }
-
-    /**
-     * Reads in a csv file, and checks for a particular patterns. If found, the patterns are removed from the record.
+     * Creates a new file to append the changed contents. On exception thrown, the file that is created is deleted.
      * 
-     * When the process is complete, return true on successful read and write. Return false on exception throw.
-     * 
-     * The file that was created is deleted when the exception is thrown. May require protection permission to interact with the parent directory (ie. Desktop).
-     */
-    
-    /**
-     * Currently only works for transaction records that have 5 columns.
+     * The second column is evaluated for matches to known useless data, and if found then removed from the string. 
+     * The new string is then inserted as a line in the new csv file.
      * 
      * @return boolean
      */
-    public boolean readFileAndOutput()
+    public boolean readFileAndOutputToFile()
     {
         String temp;
         PrintWriter pw;
@@ -101,7 +84,7 @@ public class CSVParser
         Scanner inp;
 
         //Prepare output file to be created
-        newFile = createRandomFileName();
+        newFile = createNewFileWithRandomFileName();
 
         //If file name fails to be made, it is null
         if (newFile == null)
@@ -135,7 +118,7 @@ public class CSVParser
                     strArr = temp.split(",");
                    
                     //Verify that the formatting is correct
-                    if (!verifyRecordFormat(strArr))
+                    if (!verifyRequiredFormat(strArr))
                     {
                         newFile.delete();
                         return false;
@@ -162,11 +145,11 @@ public class CSVParser
                     //Checks the length of the array, then applies the correct string generation by the length
                     switch (strArr.length)
                     {
-                        case 5: //Case for Date | Transaction Description | Withdrawals | Deposits | Balance
+                        case 5: //Case for | Date | Transaction Description | Optional | Optional | Optional
                             sb = new StringBuilder(strArr[0] + "," + strArr[1] + "," + strArr[2] + "," + strArr[3] + "," + strArr[4]);
                             break;
                         
-                        case 4:  //Case for Date | Transaction Description | Withdrawals | Deposits
+                        case 4: //Case for | Date | Transaction Description | Optional | Optional
                             sb = new StringBuilder(strArr[0] + "," + strArr[1] + "," + strArr[2] + "," + strArr[3]);
                             break;
                             
@@ -177,6 +160,11 @@ public class CSVParser
                             for(int i = 0; i < strArr.length; i++)
                             {
                                 sb.append(strArr[i]);
+
+                                if (i != strArr.length-1)
+                                {
+                                    sb.append(",");
+                                }
                             }
                             break;
                     }
@@ -206,117 +194,74 @@ public class CSVParser
     }
     
     /**
-     * Verifies that the record is in an acceptable format that the program can parse
+     * Sets the source file data will be grabbed from.
+     */
+    public void setFile(File fi)
+    {
+        f = fi;
+    }
+
+    /**
+     * Reads in a csv file, and checks for a particular patterns. If found, the patterns are removed from the record and sent to a database table.
+     */
+    public void readFileAndOutputToDB(Connection db)
+    {
+
+    }
+    
+    /**
+     * Verifies that the record contains fields in the following order:
+     * Date | Transaction Description | Optional... | Optional...
      * 
      * @param str String array
      * @return boolean
      */
-    private boolean verifyRecordFormat(String[] str)
+    private boolean verifyRequiredFormat(String[] str)
     {
         //Variables
-        boolean balanceCheck = false;
-        
-        //Check if the array length is greater than 5 or less than 4
-        if (str.length < 4 || str.length > 5)
+        boolean numberCheck1;
+        boolean numberCheck2;
+        boolean numberCheck3;
+        boolean numberCheck4;
+
+        //Check if the array length is less than 2
+        if (str.length < 2)
         {
             return false;
         }
         
-        //Check array length is = 5
-        if (str.length == 5)
-        {
-            balanceCheck = true;
-        }
+        //Trim leading and exiting spaces to ensure accuracy
+        str[0] = str[0].trim();
         
-        //Verify [0] is a date.
+        //Verify [0] is a date
+        //Format 1: DD/MM/YYYY or MM/DD/YYYY
         Pattern dateF1 = Pattern.compile("[0-9][0-9]?\\/[0-9][0-9]?\\/[0-9][0-9][0-9][0-9]");
         Matcher dateMatcher1 = dateF1.matcher(str[0]);
 
+        //Format 2: DD-MM-YYYY or MM-DD-YYYY
         Pattern dateF2 = Pattern.compile("[0-9][0-9]?-[0-9][0-9]?-[0-9][0-9][0-9][0-9]");
         Matcher dateMatcher2 = dateF2.matcher(str[0]);
 
+        //Format 3: YYYY/DD/MM/ or YYYY/MM/DD/YYYY
         Pattern dateF3 = Pattern.compile("[0-9][0-9][0-9][0-9]\\/[0-9][0-9]?\\/[0-9][0-9]?");
         Matcher dateMatcher3 = dateF3.matcher(str[0]);
 
+        //Format 4: YYYY-DD-MM or YYYY-MM-DD
         Pattern dateF4 = Pattern.compile("[0-9][0-9][0-9][0-9]-[0-9][0-9]?-[0-9][0-9]?");
         Matcher dateMatcher4 = dateF4.matcher(str[0]);
         
-        boolean numberCheck1 =  dateMatcher1.matches();
-        boolean numberCheck2 =  dateMatcher2.matches();
-
+        //Determine match
+        numberCheck1 =  dateMatcher1.matches();
+        numberCheck2 =  dateMatcher2.matches();
+        numberCheck3 =  dateMatcher3.matches();
+        numberCheck4 =  dateMatcher4.matches();
+        
+        //As long as one match is found, then the statement will be false, otherwise return false
         if (!(dateMatcher1.matches() || dateMatcher2.matches() || dateMatcher3.matches() || dateMatcher4.matches()))
         {
             return false;
         }
-        
-        if (balanceCheck)
-        {
-             //Verify that [4] is a number
-            Pattern numberF = Pattern.compile("[0-9]*\\.[0-9]*\\n");
-            Matcher matchNumberF = numberF.matcher(str[4]);
-
-            Pattern numberF2 = Pattern.compile("[0-9]*\\n");
-            Matcher matchNumberF2 = numberF2.matcher(str[4]);
-
-            Pattern numberF3 = Pattern.compile("[0-9]*\\n");
-            Matcher matchNumberF3 = numberF3.matcher(str[4]);
-
-            Pattern numberF4 = Pattern.compile("-[0-9]*\\.[0-9]*\\n");
-            Matcher matchNumberF4 = numberF4.matcher(str[4]);
-
-            Pattern numberF5 = Pattern.compile("-[0-9]*\\n");
-            Matcher matchNumberF5 = numberF5.matcher(str[4]);
-
-            Pattern numberF6 = Pattern.compile("-[0-9]*\\n");
-            Matcher matchNumberF6 = numberF6.matcher(str[4]);
-   
-            if (!(matchNumberF.matches() || matchNumberF2.matches() || matchNumberF3.matches() || matchNumberF4.matches() || matchNumberF5.matches() || matchNumberF6.matches()))
-            {
-                return false;
-            }
-        }
-       
-        //Verify that [2] and [3] are numerical fields
-        Pattern numberF7 = Pattern.compile("[0-9]*\\.[0-9]*");
-        Matcher matchNumberF7 = numberF7.matcher(str[2]);
-        
-        Pattern numberF8 = Pattern.compile("[0-9]*");
-        Matcher matchNumberF8 = numberF8.matcher(str[2]);
-        
-        Pattern numberF9 = Pattern.compile("[0-9][0-9]?\\n");
-        Matcher matchNumberF9 = numberF9.matcher(str[4]);
-        
-        //Check for debugging
-        boolean check1 = matchNumberF7.matches(); //true, false, true
-        boolean check2 = matchNumberF8.matches(); //false, true, false
-        boolean check3 = str[2].equals(""); // true true, false
-        
-        if (!(matchNumberF7.matches() || matchNumberF8.matches() || str[2].equals("")))
-        {
-            return false;
-        }
-        
-        matchNumberF7.reset(str[3]);
-        matchNumberF8.reset(str[3]);
-        
-        //Check for debugging
-        check1 = matchNumberF7.matches();
-        check2 = matchNumberF8.matches();
-        check3 = str[2].equals("");
-        
-        
-        if (!(matchNumberF7.matches() || matchNumberF8.matches() || str[3].equals("")))
-        {
-            return false;
-        }
-        
-        //Verify that [1] is not invalid
-        if(str[1].equals("") || str[1].equals(null) )
-        {
-            return false;
-        }
-        
-        //All conditions passed
-        return true;
+        //Verify that [1] is not an invalid transaction description. If invalidf, then return false, otherwise return true.
+        return !((str[1].equals("") || str[1].equals(null)));
     }
 }
